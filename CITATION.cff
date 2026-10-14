@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use Lewdex in your work, please cite it."
+title: Lewdex
+abstract: >-
+  Automatic tagging of Eagle 4 art libraries (anime, cartoon and furry art), fully offline: every
+  image, animation and video is read by two AI taggers (PixAI Tagger v1.0 and Hydra 3.5) and the
+  merged tags are written back into Eagle.
+type: software
+version: 1.0.0
+date-released: 2026-10-23
+license: Apache-2.0
+repository-code: https://github.com/edlmar/Lewdex
+authors:
+  - family-names: Edelmers
+    given-names: Edgars
+    email: edgars.edelmers@disroot.org
+keywords:
+  - image tagging
+  - auto-tagging
+  - anime
+  - furry art
+  - Eagle

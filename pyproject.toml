@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "lewdex"
+version = "1.0.0"
+description = "Local GPU auto-tagger for Eagle 4 libraries (PixAI Tagger v1.0 + Hydra 3.5)"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "Apache-2.0"
+authors = [{ name = "Edgars Edelmers" }]
+# The environment (CUDA PyTorch, NiceGUI, libvips, FFmpeg) is managed by pixi: [tool.pixi.*] below.
+dependencies = []
+
+[project.scripts]
+lewdex = "lewdex.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/lewdex"]
+
+# --- pixi: the environment and tasks (`pixi install`, `pixi run lewdex`) ------------
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+# Native libraries come from conda-forge: NiceGUI + pywebview (the window, on WebView2),
+# libvips/pyvips and PyAV with conda-forge FFmpeg. PyTorch comes from
+# the PyTorch CUDA 13.0 index, which has sm_120 (Blackwell) kernels.
+[tool.pixi.dependencies]
+python = "3.13.*"
+pyvips = "3.2.*"
+libvips = "8.18.*"
+av = "18.*"
+numpy = "2.*"
+safetensors = ">=0.8"
+einops = "0.8.*"
+httpx = "0.28.*"
+python-xxhash = ">=3.7"
+zstandard = ">=0.25"
+psutil = ">=7"
+huggingface_hub = ">=1.30,<2"
+pyyaml = "*"
+nicegui = "3.17.*"
+pywebview = "6.*"
+nvidia-ml-py = ">=12"
+
+[tool.pixi.pypi-dependencies]
+lewdex = { path = ".", editable = true }
+torch = { version = "==2.14.0", index = "https://download.pytorch.org/whl/cu130" }
+torchvision = { version = "==0.29.0", index = "https://download.pytorch.org/whl/cu130" }
+triton-windows = ">=3.8,<3.9"
+timm = ">=1.0.30"
+
+[tool.pixi.tasks]
+lewdex = "lewdex"
+doctor = "lewdex doctor"

@@ -1,0 +1,96 @@
+# lewdex configuration. Every setting is optional: anything left out keeps the built-in
+# default shown here. The GUI and CLI only override: models on/off, device, video, dry run,
+# scope. Thresholds live here on purpose (not in the GUI).
+
+[eagle]
+url = "http://localhost:41595"
+token = ""                        # only needed if Eagle runs on another machine
+timeout = 30.0
+concurrency = 4                   # parallel tag updates
+max_requests_per_second = 100.0   # write rate ceiling; Eagle stays responsive at 100-120
+retries = 4
+
+# --- Models --------------------------------------------------------------------------------
+# precision: "bf16" (default) or "fp8". FP8 makes PixAI ~31% faster on this GPU but changes
+#            about 3.5% of tag decisions versus bf16 (measured on 256 library images).
+# compile:   torch.compile (Inductor). PixAI: 1.65x faster; Hydra: ~5%, so off by default.
+# batch_size: 0 = automatic (default size, reduced to fit VRAM, halved on out-of-memory).
+
+[models.pixai]                    # PixAI Tagger v1.0, Danbooru vocabulary (30,877 tags)
+enabled = true
+revision = "9fe10addf9326e292da8a85a98ea74cd91b41771"
+precision = "bf16"
+compile = true
+batch_size = 0
+categories = ["general", "character", "copyright", "style"]   # also: "meta", "rating"
+
+[models.pixai.thresholds]         # published recommended values (per-category macro-F1)
+general = 0.17                    # stricter micro-F1 values from the model card:
+character = 0.27                  #   general 0.34, character 0.37, style 0.19,
+style = 0.15                      #   copyright 0.46, meta 0.47, rating 0.43
+copyright = 0.24
+meta = 0.17
+rating = 0.41
+
+[models.hydra]                    # Hydra 3.5 (RedRocket), e621 vocabulary (8,886 tags)
+enabled = true
+revision = "cfa9b0a1ffcf2b8df8553be7673210fd60fba23b"
+precision = "bf16"
+compile = false
+batch_size = 0
+categories = ["general", "species", "character", "copyright"]  # also: "meta", "lore"
+calibration = "f0.5@0.2"          # per-tag thresholds from the model's validation data:
+                                  # "f0.5@0.2" favours precision (fewer, surer tags; ~28 per
+                                  # item on this library), "f1.0@0.1" is the model default (~45)
+implications = "collapse"         # "collapse": only the most specific tag ("wolf", not also
+                                  # "canine", "canid", "mammal"). "inherit" (model default)
+                                  # adds every implied tag; "preserve" or "off"
+gated = true                      # skip Hydra on frames the photo gate calls real photos
+
+[models.hydra.thresholds]         # optional per-tag overrides, e.g. "canine" = 0.8
+
+[gate]                            # anime/real photo classifier (deepghs, CAFormer-S36 v1.4)
+enabled = true
+revision = "097a6c1e9e62866a435810c883a45a7cb2c7077d"
+variant = "caformer_s36_v1.4"
+threshold = 0.65                  # P(real photo) at or above this skips gated models
+
+# --- Videos and animations -----------------------------------------------------------------
+[video]
+enabled = true
+max_frames = 8                    # keyframes per video / frames per animation
+aggregate = "mean"                # "mean", "max" or "pmean" (power mean, between the two)
+pmean_power = 4.0
+dedupe = true                     # drop near-identical frames before the GPU
+dedupe_threshold = 3.0
+
+# --- Turning probabilities into tags ----------------------------------------------------------
+[merge]
+builtin_aliases = true            # e621 -> Danbooru synonyms (src/lewdex/data/aliases.tsv)
+# exact names or globs like "rating:*"; compared lowercase. The e621 counting tags carry no
+# information ("5 fingers", "4 toes", "biped").
+blacklist = ["__has_tags__", "3 fingers", "4 fingers", "5 fingers", "3 toes", "4 toes", "5 toes",
+             "biped"]
+category_prefixes = false         # write "character:hatsune miku" instead of "hatsune miku"
+max_tags = 0                      # 0 = no limit per item
+
+[merge.aliases]                   # extra aliases, "from" = "to"
+
+# --- Writing to Eagle ----------------------------------------------------------------------------
+[write]
+mode = "replace"                  # "replace": every processed item's tags become exactly the
+                                  # new tags (all others removed, backed up in lewdex.db).
+                                  # "add": never removes tags. "sync": also removes tags this
+                                  # tool added earlier that it no longer predicts.
+
+[runtime]
+device = "auto"                   # "auto", "cuda:0", "cpu"
+decode_workers = 0                # 0 = automatic
+frames_per_step = 16
+vram_budget = 0.85
+
+[paths]                           # relative to this file
+database = "lewdex.db"
+models = "models"
+cache = "cache"
+logs = "logs"

@@ -1,0 +1,14 @@
+# Normalise line endings in the repository; checkouts get the platform's own.
+* text=auto
+
+# Windows launcher and installer files must keep CRLF.
+*.cmd text eol=crlf
+*.cs text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary files
+*.ico binary
+*.png binary
+
+# Generated lock file: no textual merges, collapsed in diffs.
+pixi.lock merge=binary linguist-language=YAML linguist-generated=true -diff

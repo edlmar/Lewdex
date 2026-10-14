@@ -1,0 +1,23 @@
+# Python / tooling caches
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environments
+.pixi/*
+!.pixi/config.toml
+
+# Release archives
+/build/
+/dist/
+
+# Runtime data: your settings, database, models, caches and logs are personal, never published
+/lewdex.toml
+/lewdex.db*
+/models/
+/cache/
+/logs/
+
+# Built by the installer from scripts/Lewdex.cs
+/Lewdex.exe
